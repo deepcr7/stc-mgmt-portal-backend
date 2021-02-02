@@ -42,7 +42,7 @@ async function addProject(req,res){
 async function getSpecificProject(req,res) {
 
   try{
-    let project = await Project.findOne({_id:req.query.projectId}).populate("tasks");
+    let project = await Project.findOne({_id:req.query.projectId}).populate("tasks")
 
     if(!project){
       return res.status(404).send({
@@ -64,9 +64,10 @@ async function getSpecificProject(req,res) {
 
 async function getAllProjects(req,res){
   try{
-    let projects = await Project.find({users:req.user._id}).sort({createdAt:'desc'}).limit(5)
+    let projects = await Project.find({users:req.user._id}).sort({createdAt:'desc'}).limit(5).populate("tasks")
+    
 
-    if(!projects){
+    if(projects.length === 0){
       return res.status(400).send({message:"No Projects found!"})
     }
     return res.status(200).send(projects)
@@ -81,9 +82,18 @@ async function getAllProjects(req,res){
 
 async function deleteProject(req,res) {
   try{
+    let user = await User.findOne({_id:req.user._id})
+
+    console.log(user)
+    if(user.role == "Admin"){
     await Project.findByIdAndRemove(req.params.projectId);
 
     return res.status(200).send({message:"Project has been deleted!"})
+    } else{
+      return res.status(403).send({
+        message:"You do not have the rights to delete this project!"
+      })
+    }
   } catch(err){
     return res.status(500).send({
       message:"Error!"
@@ -95,17 +105,37 @@ async function deleteProject(req,res) {
 
 async function updateProject(req,res) {
 try{
- let project = await Project.findOneAndUpdate({_id:req.params.projectId,creatorId:req.params.creatorId},req.body,{new:true})
+  // let {title,description,startDate,endDate,users,tasks} = req.body
+
+ let project = await Project.findOne({_id:req.params.projectId,creatorId:req.user._id})
+ console.log(project)
+
+ let user = await User.findOne({_id:req.user._id})
+ console.log(user)
 
  if(!project){
    return res.status(403).send({message:"Invalid Request!"})
  }
- return res.status(200).send(project)
+ if(user.role === "Admin"){
+    // project.title = req.body.title;
+    // project.description = req.body.description;
+    // project.startDate = req.body.startDate;
+    // project.endDate = req.body.endDate;
+    // project.users = req.body.users;
+    // project.tasks = req.body.tasks;
+    Object.keys(req.body).forEach((key) => {
+      project[key] = req.body[key];
+    });
+    await project.save();
+    return res.status(200).send(project)
+ } else {
+   return res.status(403).send({
+     message:"You do not have enough rights to modify the project!"
+   })
+ }
 }
 catch(err){
-  return res.status(500).send({
-    message:"Error!"
-  })
+  return res.status(500).send(err.message)
 }
 } 
 
@@ -125,6 +155,11 @@ async function addTask(req,res){
     }
     const taskData = {
       ...req.body
+    }
+    if(taskData.startDate < project.startDate || taskData.startDate> project.endDate){
+      return res.status(400).send({
+        message:"The Start Date of a Task cannot be before the Project's Start Date or after the Projects End Date!"
+      })
     }
     const task = new Task({
       ...taskData
@@ -149,7 +184,7 @@ async function addTask(req,res){
 async function getSpecificTask(req,res) {
 
   try{
-    let task = await Project.findOne({_id:req.query.taskId})
+    let task = await Task.findOne({_id:req.query.taskId})
 
     if(!task){
       return res.status(404).send({
@@ -173,7 +208,7 @@ async function getAllTasksForUser(req,res){
     try{
       let tasks = await Task.find({allotedUsers:req.user._id}).sort({createdAt:'desc'}).limit(5)
   
-      if(!tasks){
+      if(tasks.length === 0){
         return res.status(400).send({message:"No Tasks found!"})
       }
       return res.status(200).send(tasks)
@@ -218,7 +253,7 @@ async function deleteTask(req,res){
 //update a task
 async function updateTask(req,res){
   let{taskId} = req.params
-  let {title,type,status,priority,description,allotedUsers,startDate,endDate} = req.body;
+  // let {title,type,status,priority,description,allotedUsers,startDate,endDate} = req.body;
 
   try{
     let task = await Task.findById(taskId)
@@ -228,14 +263,17 @@ async function updateTask(req,res){
         message:"Task to be updated not found!"
       })
     }
-    task.title = title;
-    task.type = type;
-    task.status = status;
-    task.priority = priority,
-    task.description = description,
-    task.allotedUsers = allotedUsers,
-    task.startDate = startDate,
-    task.endDate = endDate
+    // task.title = title;
+    // task.type = type;
+    // task.status = status;
+    // task.priority = priority;
+    // task.description = description;
+    // task.allotedUsers = allotedUsers;
+    // task.startDate = startDate;
+    // task.endDate = endDate;
+    Object.keys(req.body).forEach((key) => {
+      task[key] = req.body[key];
+    });
     await task.save();
     res.status(200).send(task)
   } catch(err){

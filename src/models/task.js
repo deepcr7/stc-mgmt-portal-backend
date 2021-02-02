@@ -20,8 +20,7 @@ const TaskSchema = mongoose.Schema(
       required: true
     },
     priority:{
-      type:String,
-      required:true
+      type:String
     },
     projectId:{
       type:mongoose.Schema.Types.ObjectId,

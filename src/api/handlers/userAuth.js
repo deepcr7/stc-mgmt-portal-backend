@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 
 
 //signup function
-async function signupFunction(req,res,next) {
+async function signupFunction(req,res) {
 
   //firstly salt the hashing for the password
   //genSalt is math.pow(2, value)
@@ -14,6 +14,7 @@ async function signupFunction(req,res,next) {
   hashedpassword = await bcrypt.hash(req.body.password, salt)
 
   const emailAlreadyExists = await User.findOne({email: req.body.email})
+
 
   if(emailAlreadyExists){
     res.status(400).send({message:"Email Already Exists!"})
@@ -28,6 +29,7 @@ async function signupFunction(req,res,next) {
   })
 
   try{
+
     const userSignup = await user.save();
     const payload = {
       _id: userSignup._id
@@ -47,7 +49,6 @@ async function signupFunction(req,res,next) {
       message: err.message
     })
   }
-
 }
 
 //Login Function

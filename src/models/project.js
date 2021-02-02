@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const Task = require('./task')
+const Task = require('./task');
+const user = require('./user');
 
 
 const ProjectSchema = mongoose.Schema(
@@ -32,11 +33,23 @@ const ProjectSchema = mongoose.Schema(
     },
     startDate:{
       type:Date,
-      required:'Please enter a start date for this project!'
+      required:'Please enter a start date for this project!',
+      validate: [
+        function () {
+          return this.startDate > Date.now();
+        },
+        'Start date should not be in the past',
+      ]
     },
     endDate:{
       type:Date,
-      required:'Please enter an end date for this project!'
+      required:'Please enter an end date for this project!',
+      validate: [
+        function () {
+          return this.endDate > this.startDate;
+        },
+        'End Date should be after start Date',
+      ]
     },
     users:[{
       type:mongoose.Schema.ObjectId,

@@ -18,7 +18,7 @@ router.post('/updateproject/:projectId/:creatorId',checkAuth,projectHandler.upda
 router.post('/addtask',checkAuth,taskHandler.addTask)
 router.get('/getspecifictask',checkAuth,taskHandler.getSpecificTask)
 router.get('/getalltasks',checkAuth,taskHandler.getAllTasksForUser)
-router.delete('/deletetask/:projectId',checkAuth,taskHandler.deleteTask)
+router.delete('/deletetask/:taskId/:projectId',checkAuth,taskHandler.deleteTask)
 router.post('/updatetask/:taskId',checkAuth,taskHandler.updateTask);
 
 
