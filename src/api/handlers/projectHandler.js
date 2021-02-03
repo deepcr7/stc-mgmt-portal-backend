@@ -12,7 +12,7 @@ async function addProject(req,res){
     const project = new Project({
       ...projectData
     });
-    await project.save((err,data) => {
+    const data = await project.save();
       
       var users = req.body.users;
 
@@ -27,7 +27,6 @@ async function addProject(req,res){
        User.findOneAndUpdate({_id: req.user._id || req.body.creatorId},{$push: { projects: data._id}},{safe:true, upsert: true}, (err) => {
         if(err) res.status(500).send(err)
       })
-    });
     return res.status(201).send(project);
   } catch(err){
     console.error(err)
@@ -84,8 +83,10 @@ async function deleteProject(req,res) {
   try{
     let user = await User.findOne({_id:req.user._id})
 
+    let project = await Project.findById(req.params.projectId)
+
     console.log(user)
-    if(user.role == "Admin"){
+    if(req.user._id == project.creatorId){
     await Project.findByIdAndRemove(req.params.projectId);
 
     return res.status(200).send({message:"Project has been deleted!"})
@@ -110,13 +111,13 @@ try{
  let project = await Project.findOne({_id:req.params.projectId,creatorId:req.user._id})
  console.log(project)
 
- let user = await User.findOne({_id:req.user._id})
  console.log(user)
 
  if(!project){
-   return res.status(403).send({message:"Invalid Request!"})
+  return res.status(403).send({
+    message:"You do not have enough rights to modify the project!"
+  })
  }
- if(user.role === "Admin"){
     // project.title = req.body.title;
     // project.description = req.body.description;
     // project.startDate = req.body.startDate;
@@ -128,12 +129,8 @@ try{
     });
     await project.save();
     return res.status(200).send(project)
- } else {
-   return res.status(403).send({
-     message:"You do not have enough rights to modify the project!"
-   })
+   
  }
-}
 catch(err){
   return res.status(500).send(err.message)
 }

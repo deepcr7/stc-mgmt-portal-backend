@@ -21,8 +21,7 @@ const MeetingSchema = mongoose.Schema(
       required: true
     }],
     momContent:{
-      type: String,
-      required: true
+      type: String
     }
   },{timestamps: true}
 );
