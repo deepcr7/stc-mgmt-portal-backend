@@ -136,6 +136,25 @@ catch(err){
 }
 } 
 
+//search for a project with its unique access code
+
+async function searchProjectwithAccessId(req,res){
+  try{
+    let project = Project.findOne({accessId:req.query.accessId}).populate("tasks")
+    if(!project){
+      return res.status(404).send({
+        message:"No Project Found!"
+      })
+    }
+    return res.status(200).send(project)
+  }
+  catch(err){
+    return res.status(500).send({
+      message:"Error"
+    })
+  }
+}
+
 //Add a Task
 
 async function addTask(req,res){
@@ -174,7 +193,6 @@ async function addTask(req,res){
     })
   }
 }
-
 
 //get a particular task
 
@@ -291,5 +309,6 @@ module.exports = {
   getSpecificTask,
   getAllTasksForUser,
   deleteTask,
-  updateTask
+  updateTask,
+  searchProjectwithAccessId
 }
