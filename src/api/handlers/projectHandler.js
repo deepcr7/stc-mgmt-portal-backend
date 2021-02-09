@@ -12,82 +12,112 @@ async function addProject(req,res){
     const project = new Project({
       ...projectData
     });
-    const data = await project.save();
-      
-      var users = req.body.users;
+    var users = req.body.users;
 
+    let flag =0;
+    //check if users exist
+    for await (const user of users){
+      let userData = await User.findById(user);
+      if(!userData){
+        flag++
+      }
+      console.log(userData)
+      console.log(flag)
+    }
+
+    if(flag > 0){
+      return res.status(404).send({
+        message: flag + " user/users are not valid!"
+      })
+    } else if(flag == 0){
+      var data = await project.save();
       //update users projects 
       for(var i =0;i<users.length; i++){
-         User.findOneAndUpdate({_id:users[i]},{$push:{projects:data._id}},{safe: true, upsert: true},(err) => {
-          if (err) res.status(500).send(err);
-        })
-      }
-      
-      //update creators projects 
-       User.findOneAndUpdate({_id: req.user._id || req.body.creatorId},{$push: { projects: data._id}},{safe:true, upsert: true}, (err) => {
-        if(err) res.status(500).send(err)
-      })
-    return res.status(201).send(project);
+        User.findOneAndUpdate({_id:users[i]},{$push:{projects:data._id}},{safe: true, upsert: true},(err) => {
+         if (err) res.status(500).send(err);
+       })
+     }
+     
+     //update creators projects 
+      User.findOneAndUpdate({_id: req.user._id || req.body.creatorId},{$push: { projects: data._id}},{safe:true, upsert: true}, (err) => {
+       if(err) res.status(500).send(err)
+     })
+   return res.status(201).send(project);
+    }
+
+       
   } catch(err){
     console.error(err)
-    res.status(500).send({
-      message:"Error"
-    })
+    res.status(500).send(err.message)
   }
 }
 
-//get a specific project(everyone is allowed to see the data in this)
+//get a specific project(everyone is allowed to see the data in this) (debatable route)
 
 async function getSpecificProject(req,res) {
 
   try{
-    let project = await Project.findOne({_id:req.query.projectId}).populate("tasks")
 
-    if(!project){
+    let project = await Project.find( {
+      $and : [
+               { 
+                 $or : [ {'users':{$in:[req.user._id]}},{'creatorId':req.user._id} ]
+               },
+               { 
+                 "_id":req.query.projectId
+               }
+             ]
+    } ).populate({path:'tasks',
+    populate:[{
+      path:'allottedUsers'
+    }]
+  })
+    console.log(project)
+    if(project.length === 0){
       return res.status(404).send({
-        message:"Project does not exist!"
+        message:"Project does not exist or you dont have access to this!"
       })
     }
-
     return res.status(200).send(project)
-
   } catch(err){
-    return res.status(500).send({
-      message:"Error"
-    })
+    return res.status(500).send(err.message)
   }
 
 }
 
-//get all projects for a particular user
+//get all projects for a particular user (side tab and right tab)
 
 async function getAllProjects(req,res){
   try{
-    let projects = await Project.find({users:req.user._id}).sort({createdAt:'desc'}).limit(5).populate("tasks")
+    let projects = await Project.find( { $or:[ {'users':req.user._id},{'creatorId':req.user._id} ]}).sort({createdAt:'desc'}).limit(5).populate({path:'tasks',
+    populate:[{
+      path:'allottedUsers'
+    }]
+  })
     
-
     if(projects.length === 0){
       return res.status(400).send({message:"No Projects found!"})
     }
     return res.status(200).send(projects)
   } catch(err){
-    return res.status(500).send({
-      message:"Error!"
-    })
+    return res.status(500).send(err.message)
   }
 }
 
 //delete a project
-
 async function deleteProject(req,res) {
   try{
-    let user = await User.findOne({_id:req.user._id})
+    let {projectId} = req.params
+    let project = await Project.findById(projectId)
 
-    let project = await Project.findById(req.params.projectId)
-
-    console.log(user)
     if(req.user._id == project.creatorId){
-    await Project.findByIdAndRemove(req.params.projectId);
+    await Project.findByIdAndRemove(projectId);
+
+    await Task.findOneAndDelete({projectId: {$in:projectId}})
+
+    let user = await User.findOne({projects:{$in:projectId}})
+
+    user.projects = user.projects.filter(projectId => projectId !== project._id)
 
     return res.status(200).send({message:"Project has been deleted!"})
     } else{
@@ -96,9 +126,7 @@ async function deleteProject(req,res) {
       })
     }
   } catch(err){
-    return res.status(500).send({
-      message:"Error!"
-    })
+    return res.status(500).send(err.message)
   }
 }
 
@@ -107,15 +135,13 @@ async function deleteProject(req,res) {
 async function updateProject(req,res) {
 try{
   // let {title,description,startDate,endDate,users,tasks} = req.body
-
+ 
  let project = await Project.findOne({_id:req.params.projectId,creatorId:req.user._id})
  console.log(project)
 
- console.log(user)
-
  if(!project){
   return res.status(403).send({
-    message:"You do not have enough rights to modify the project!"
+    message:"Project does not exist or you do not have enough rights to modify the project!"
   })
  }
     // project.title = req.body.title;
@@ -124,12 +150,40 @@ try{
     // project.endDate = req.body.endDate;
     // project.users = req.body.users;
     // project.tasks = req.body.tasks;
+
+    
     Object.keys(req.body).forEach((key) => {
+      if(key == "users"){
+        return;
+      }
       project[key] = req.body[key];
     });
-    await project.save();
+    if(req.body.users){
+      var flag =0;
+      for await (const user of req.body.users){
+        
+        let userData = await User.findById(user)
+      if(!userData){
+        flag++
+      }
+      console.log(userData)
+      console.log(flag)
+    }
+      
+      if(flag == 0){
+        await project.users.push(req.body.users)
+        await project.save();
+      } else {
+        return res.status(403).send({
+          message: flag + 'user/users do not exist!'
+        })
+      }
+      
+  }
+     else if(!req.body.users){
+      await project.save();
+    }
     return res.status(200).send(project)
-   
  }
 catch(err){
   return res.status(500).send(err.message)
@@ -140,7 +194,11 @@ catch(err){
 
 async function searchProjectwithAccessId(req,res){
   try{
-    let project = Project.findOne({accessId:req.query.accessId}).populate("tasks")
+    let project = Project.findOne({accessId:req.query.accessId}).populate({path:'tasks',
+    populate:[{
+      path:'allottedUsers'
+    }]
+  })
     if(!project){
       return res.status(404).send({
         message:"No Project Found!"
@@ -166,75 +224,98 @@ async function addTask(req,res){
 
     if(!project){
       return res.status(400).send({
-        message:"No Project Found"
+        message:"No Project Found or you dont have the rights to this project!"
       })
     }
     const taskData = {
       ...req.body
     }
-    if(taskData.startDate < project.startDate || taskData.startDate> project.endDate){
+  let usersAllotted = taskData.allottedUsers
+  console.log(usersAllotted)
+    let flag =0;
+    //check if users exist
+    for await (const user of usersAllotted){
+      let userData = await Project.find({users:{$in:[user]}})
+      if(userData.length == 0){
+        flag++
+      }
+      console.log(userData)
+      console.log(flag)
+    }
+
+    if(flag > 0){
+      return res.status(404).send({
+        message: flag + " user/users of the allotted users are not valid!"
+      })
+    } else if(flag == 0){
+      if(taskData.startDate < project.startDate || taskData.startDate> project.endDate){
       return res.status(400).send({
         message:"The Start Date of a Task cannot be before the Project's Start Date or after the Projects End Date!"
       })
     }
+
+
     const task = new Task({
       ...taskData
-    });
+    }).populate('allottedUsers');
 
     await task.save();
     await project.tasks.push(task._id)
     await project.save();
 
-    return res.status(201).send({message:"Task has been added!"})
-
+    return res.status(201).send(task)
+  }    
   } catch(err){
-    return res.status(500).send({
-      message:"Error!"
-    })
+    return res.status(500).send(err.message)
   }
 }
 
-//get a particular task
+//get a particular task(on clicking on plus button for a task)
 
 async function getSpecificTask(req,res) {
 
   try{
-    let task = await Task.findOne({_id:req.query.taskId})
+    let user = await User.findById(req.user._id)
+    if(!user){
+      return res.status(404).send({
+        message:"User Not Found!"
+      })
+    }
 
+    let task = await Task.findOne({_id:req.query.taskId,allottedUsers:req.user._id}).populate('allottedUsers')
+    
+    // .populate([{path:'allottedUsers'},{path:'projectId'}])
+console.log(task)
     if(!task){
       return res.status(404).send({
-        message:"Task does not exist!"
+        message:"Task does not exist or you do not have the rights to view this!"
       })
     }
 
     return res.status(200).send(task)
 
   } catch(err){
-    return res.status(500).send({
-      message:"Error"
-    })
+    return res.status(500).send(err.message)
   }
 
 }
 
-//get all the tasks for a particular user
+//get all the tasks for a particular user in that project(on clicking the users icon)
 
 async function getAllTasksForUser(req,res){
     try{
-      let tasks = await Task.find({allotedUsers:req.user._id}).sort({createdAt:'desc'}).limit(5)
+      let tasks = await Task.find({projectId:req.query.projectId,allottedUsers:req.user._id}).sort({createdAt:'desc'}).limit(5).populate('projectId')
   
       if(tasks.length === 0){
         return res.status(400).send({message:"No Tasks found!"})
       }
       return res.status(200).send(tasks)
     } catch(err){
-      return res.status(500).send({
-        message:"Error!"
-      })
+      return res.status(500).send(err.message)
     }
 }
 
-//delete a task
+//delete a task(only creator can delete it)
 
 async function deleteTask(req,res){
   let {taskId} = req.params;
@@ -259,16 +340,14 @@ async function deleteTask(req,res){
 
     return res.status(200).send({message:"Task has been deleted!"})
   } catch(err){
-    return res.status(500).send({
-      message:"Error"
-    })
+    return res.status(500).send(err.message)
   }
 }
 
 //update a task
 async function updateTask(req,res){
   let{taskId} = req.params
-  // let {title,type,status,priority,description,allotedUsers,startDate,endDate} = req.body;
+  // let {title,type,status,priority,description,allottedUsers,startDate,endDate} = req.body;
 
   try{
     let task = await Task.findById(taskId)
@@ -283,18 +362,57 @@ async function updateTask(req,res){
     // task.status = status;
     // task.priority = priority;
     // task.description = description;
-    // task.allotedUsers = allotedUsers;
+    // task.allottedUsers = allottedUsers;
     // task.startDate = startDate;
     // task.endDate = endDate;
+    // Object.keys(req.body).forEach((key) => {
+    //   task[key] = req.body[key];
+    // });
+    // await task.save();
+    // res.status(200).send(task)
+
     Object.keys(req.body).forEach((key) => {
+      if(key == "allottedUsers"){
+        return;
+      }
       task[key] = req.body[key];
     });
-    await task.save();
-    res.status(200).send(task)
+    let projectData = await Project.findOne({creatorId:req.user._id,_id:req.params.projectId})
+    console.log(projectData)
+    if(req.body.allottedUsers){
+      //check if the user is the creator of the project
+      if(!projectData){
+    return res.status(403).send({message:"You do not have the rights to alter users!"})        
+      }
+      //check if the users to be added exist
+      var flag =0;
+      for await (const user of req.body.allottedUsers){
+        //check if the user is a part of the project
+        let projectAccess = await Project.findOne({users:user})
+
+      if(!projectAccess){
+        flag++
+      }
+      console.log(projectAccess)
+      console.log(flag)
+    }
+      
+      if(flag == 0){
+        await task.allottedUsers.push(req.body.allottedUsers)
+        await task.save();
+      } else {
+        return res.status(403).send({
+          message:flag + " user/users do not exist in the project!"
+        })
+      }
+      
+  }
+     else if(!req.body.allottedUsers){
+      await task.save();
+    }
+    return res.status(200).send(task)
   } catch(err){
-    res.status(500).send({
-      message:"Error"
-    })
+    res.status(500).json(err.message)
   }
 }
 

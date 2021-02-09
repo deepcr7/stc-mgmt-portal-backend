@@ -53,7 +53,6 @@ const ProjectSchema = mongoose.Schema(
     },
     users:[{
       type:mongoose.Schema.ObjectId,
-      required:"Each Project should have atleast one user!",
       ref:"User"
     }]
   },{timestamps: true}
@@ -61,9 +60,9 @@ const ProjectSchema = mongoose.Schema(
 
 //before deleting a project, delete all the tasks associated with it, we will not delete projects from user as it might be required to store them for later purposes
 
-ProjectSchema.pre("remove",async (next) => {
-  await Task.deleteMany({projectId: {$in: this.tasks}})
-  next();
-});
+// ProjectSchema.pre("remove",async (next) => {
+//   await Task.deleteMany({projectId: {$in: this.tasks}})
+//   next();
+// });
 
 module.exports = mongoose.model("Project", ProjectSchema)

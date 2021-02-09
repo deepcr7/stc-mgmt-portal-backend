@@ -24,7 +24,8 @@ const TaskSchema = mongoose.Schema(
     },
     projectId:{
       type:mongoose.Schema.Types.ObjectId,
-      required: true
+      required: true,
+      ref:'Project'
     },
     startDate:{
       type:Date,
@@ -34,9 +35,10 @@ const TaskSchema = mongoose.Schema(
       type:Date,
       required:'Please enter an end date for this task!'
     },
-    allotedUsers:[{
+    allottedUsers:[{
       type:mongoose.Schema.ObjectId,
-      required:"Each Task should have atleast one user!"
+      required:"Each Task should have atleast one user!",
+      ref:"User"
     }]
   },{timestamps: true}
 );

@@ -9,7 +9,7 @@ var app = express();
 
 const userRoutes = require("./api/routes/user.js")
 const projectRoutes = require("./api/routes/project")
-// const meetingRoutes = require("./api/routes/meeting");
+// const meetingRoutes = require("./api/routes/meetings");
 
 
 app.use(cors());
