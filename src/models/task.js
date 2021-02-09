@@ -36,7 +36,7 @@ const TaskSchema = mongoose.Schema(
       required:'Please enter an end date for this task!'
     },
     allottedUsers:[{
-      type:mongoose.Schema.ObjectId,
+      type:mongoose.Schema.Types.ObjectId,
       required:"Each Task should have atleast one user!",
       ref:"User"
     }]

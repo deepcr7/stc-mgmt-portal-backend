@@ -11,7 +11,7 @@ const ProjectSchema = mongoose.Schema(
       trim:true
     },
     creatorId:{
-      type:mongoose.Schema.ObjectId,
+      type:mongoose.Schema.Types.ObjectId,
       required:true,
       ref:"User"
     },
@@ -52,7 +52,7 @@ const ProjectSchema = mongoose.Schema(
       ]
     },
     users:[{
-      type:mongoose.Schema.ObjectId,
+      type:mongoose.Schema.Types.ObjectId,
       ref:"User"
     }]
   },{timestamps: true}
