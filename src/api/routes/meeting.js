@@ -7,13 +7,12 @@ const meetingHandler = require('../handlers/meetingHandler')
 
 //Meeting Routes
 
-router.post('/createMeet',meetingHandler.saveRoomAndCreatorAndStartMeet)
-router.post('/createMeet/endMeet',meetingHandler.changeMeetStatus)
-router.get('/activeMeetings',meetingHandler.activeMeetDetails)
-router.get('/joinMeet',meetingHandler.joinMeetForParticipants)
-router.post('/joinMeet',meetingHandler.saveParticipantsAndStartMeet)
-router.get('/meetDetails',meetingHandler.getSpecificMeetDetails)
-router.post('/postMOM',meetingHandler.postmom)
-router.get('/test',meetingHandler.test )
+router.post('/createMeet',checkAuth,meetingHandler.saveRoomAndCreatorAndStartMeet)
+router.post('/createMeet/endMeet',checkAuth,meetingHandler.changeMeetStatus)
+router.get('/activeMeetings',checkAuth,meetingHandler.activeMeetDetails)
+router.get('/joinMeet',checkAuth,meetingHandler.joinMeetForParticipants)
+router.get('/meetDetails',checkAuth,meetingHandler.getSpecificMeetDetails)
+router.post('/postMOM',checkAuth,meetingHandler.postmom)
+router.get('/test',checkAuth,meetingHandler.test )
 
 module.exports = router
