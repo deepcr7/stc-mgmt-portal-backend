@@ -1,6 +1,7 @@
 const Project = require("../../models/project")
 const Task = require("../../models/task")
 const User = require("../../models/user")
+const mongoose = require('mongoose')
 
 //add a Project
 async function addProject(req,res){
@@ -48,7 +49,7 @@ async function addProject(req,res){
        
   } catch(err){
     console.error(err)
-    res.status(500).send(err.message)
+    res.status(500).json(err.message)
   }
 }
 
@@ -80,7 +81,7 @@ async function getSpecificProject(req,res) {
     }
     return res.status(200).send(project)
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 
 }
@@ -100,7 +101,7 @@ async function getAllProjects(req,res){
     }
     return res.status(200).send(projects)
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 }
 
@@ -126,7 +127,7 @@ async function deleteProject(req,res) {
       })
     }
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 }
 
@@ -137,7 +138,6 @@ try{
   // let {title,description,startDate,endDate,users,tasks} = req.body
  
  let project = await Project.findOne({_id:req.params.projectId,creatorId:req.user._id})
- console.log(project)
 
  if(!project){
   return res.status(403).send({
@@ -159,8 +159,11 @@ try{
       project[key] = req.body[key];
     });
     if(req.body.users){
-      var flag =0;
+
+      var flag= 0;
       for await (const user of req.body.users){
+        console.log(typeof((user)))
+        console.log(user)
         
         let userData = await User.findById(user)
       if(!userData){
@@ -171,8 +174,9 @@ try{
     }
       
       if(flag == 0){
-        await project.users.push(req.body.users)
+         await project.users.push((req.body.users))
         await project.save();
+        console.log(project)
       } else {
         return res.status(403).send({
           message: flag + 'user/users do not exist!'
@@ -186,7 +190,9 @@ try{
     return res.status(200).send(project)
  }
 catch(err){
-  return res.status(500).send(err.message)
+  return res.status(500).json({
+    message: err
+  })
 }
 } 
 
@@ -266,7 +272,7 @@ async function addTask(req,res){
     return res.status(201).send(task)
   }    
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 }
 
@@ -295,7 +301,7 @@ console.log(task)
     return res.status(200).send(task)
 
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 
 }
@@ -311,7 +317,7 @@ async function getAllTasksForUser(req,res){
       }
       return res.status(200).send(tasks)
     } catch(err){
-      return res.status(500).send(err.message)
+      return res.status(500).json(err.message)
     }
 }
 
@@ -340,7 +346,7 @@ async function deleteTask(req,res){
 
     return res.status(200).send({message:"Task has been deleted!"})
   } catch(err){
-    return res.status(500).send(err.message)
+    return res.status(500).json(err.message)
   }
 }
 
@@ -388,7 +394,7 @@ async function updateTask(req,res){
       var flag =0;
       for await (const user of req.body.allottedUsers){
         //check if the user is a part of the project
-        let projectAccess = await Project.findOne({users:user})
+        let projectAccess = await Project.findOne({users: mongoose.Types.ObjectId(user)})
 
       if(!projectAccess){
         flag++
