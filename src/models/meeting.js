@@ -8,24 +8,31 @@ const MeetingSchema = mongoose.Schema(
       required: true,
       trim:true
     },
-    startTime: {
-      type: Date,
-      required: true
+    meetingStartedBy: {
+      type: String,
+      required: true,
+      trim:true
     },
-    endTime:{
-      type:Date,
-      required: true
+    status: {
+      type: String,
+      required: true,
+      trim:true
     },
-    participants:[{
-      type: mongoose.Schema.Types.ObjectId,
-      required: true
-    }],
-    momContent:{
+    participants: [
+      {
+        joinee : {
+          type: String,
+          required: true,
+          trim:true
+        }
+      }
+    ],
+    MOM: {
       type: String
     }
-  },{timestamps: true}
+  }
 );
 
 
 
-module.exports = mongoose.model("Meeting", MeetingSchema)
+module.exports = mongoose.model("meeting", MeetingSchema)

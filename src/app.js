@@ -9,7 +9,7 @@ var app = express();
 
 const userRoutes = require("./api/routes/user.js")
 const projectRoutes = require("./api/routes/project")
-// const meetingRoutes = require("./api/routes/meetings");
+const meetingRoutes = require("./api/routes/meeting.js");
 
 
 app.use(cors());
@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/user',userRoutes)
 app.use('/project',projectRoutes)
-// app.use('/meeting',meetingRoutes)
+app.use('/meeting', meetingRoutes)
 
 //error handling
 app.use((err, req, res, next) => {
