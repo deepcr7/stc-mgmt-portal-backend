@@ -23,7 +23,7 @@ async function changeMeetStatus (req,res){
     meetingData.status = "inactive"
     await meetingData.save();
 
-    res.send("meeting ended bye bye hola!" + req.body.remove);
+    res.send("meeting status of room name = " + originalText "and hashed room name = " + req.body.remove + "changed to inactive");
 }
 
 function activeMeetDetails (req,res){
