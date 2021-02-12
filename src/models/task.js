@@ -37,7 +37,6 @@ const TaskSchema = mongoose.Schema(
     },
     allottedUsers:[{
       type:mongoose.Schema.Types.ObjectId,
-      required:"Each Task should have atleast one user!",
       ref:"User"
     }]
   },{timestamps: true}
