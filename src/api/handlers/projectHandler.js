@@ -420,6 +420,42 @@ async function updateTask(req,res){
   }
 }
 
+//get list of all users present in the db
+
+async function getAllUsers(req,res){
+  try{
+    let userData = await User.find().select('-password -v')
+    if(!userData){
+      return res.status(404).send({
+        message:"No Users Found!"
+      })
+    }
+    return res.status(200).send(userData)
+  } catch(err){
+    return res.status(500).json({
+      message: err.message
+    })
+  }
+}
+
+//get user details based on regId
+
+async function getAllUsersWithId(req,res){
+  try{
+    let userData = await User.find({regId:req.body.regId}).select('-password -v')
+    if(!userData){
+      return res.status(404).send({
+        message:"No Users Found!"
+      })
+    }
+    return res.status(200).send(userData)
+  } catch(err){
+    return res.status(500).json({
+      message: err.message
+    })
+  }
+}
+
 
 module.exports = {
   addProject,
@@ -432,5 +468,7 @@ module.exports = {
   getAllTasksForUser,
   deleteTask,
   updateTask,
-  searchProjectwithAccessId
+  searchProjectwithAccessId,
+  getAllUsers,
+  getAllUsersWithId
 }
