@@ -30,7 +30,7 @@ const MeetingSchema = mongoose.Schema(
     MOM: {
       type: String
     }
-  }
+  },{timestamps:true}
 );
 
 

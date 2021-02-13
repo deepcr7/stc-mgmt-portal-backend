@@ -78,9 +78,6 @@ async function postmom(req,res){
     res.send("mom saved!")
 }
 
-function test (req,res){
-    res.send("testing in process!!")
-}
 
 module.exports = {
     saveRoomAndCreatorAndStartMeet,
@@ -88,6 +85,5 @@ module.exports = {
     activeMeetDetails,
     joinMeetForParticipants,
     getSpecificMeetDetails,
-    postmom,
-    test
+    postmom
 }
