@@ -17,7 +17,8 @@ const ProjectSchema = mongoose.Schema(
     },
     description: {
       type: String,
-      required: true
+      required: true,
+      trim:true
     },
     tasks:[{
       type:mongoose.Schema.Types.ObjectId,

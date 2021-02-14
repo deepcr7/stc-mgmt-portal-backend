@@ -13,14 +13,18 @@ const TaskSchema = mongoose.Schema(
       required:true
     },
     description: {
-      type: String
+      type: String,
+      trim:true
     },
     status:{
       type: String,
-      required: true
+      required: true,
+      trim:true,
+      default:'To Do'
     },
     priority:{
-      type:String
+      type:String,
+      trim:true
     },
     projectId:{
       type:mongoose.Schema.Types.ObjectId,

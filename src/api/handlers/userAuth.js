@@ -25,6 +25,7 @@ async function signupFunction(req,res) {
     ...req.body,
     password: hashedpassword
   }
+  console.log(userData)
 
   var user = new User({
     ...userData
