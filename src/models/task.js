@@ -13,14 +13,18 @@ const TaskSchema = mongoose.Schema(
       required:true
     },
     description: {
-      type: String
+      type: String,
+      trim:true
     },
     status:{
       type: String,
-      required: true
+      required: true,
+      trim:true,
+      default:'To Do'
     },
     priority:{
-      type:String
+      type:String,
+      trim:true
     },
     projectId:{
       type:mongoose.Schema.Types.ObjectId,
@@ -37,7 +41,6 @@ const TaskSchema = mongoose.Schema(
     },
     allottedUsers:[{
       type:mongoose.Schema.Types.ObjectId,
-      required:"Each Task should have atleast one user!",
       ref:"User"
     }]
   },{timestamps: true}

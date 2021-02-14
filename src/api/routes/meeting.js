@@ -10,9 +10,9 @@ const meetingHandler = require('../handlers/meetingHandler')
 router.post('/createMeet',checkAuth,meetingHandler.saveRoomAndCreatorAndStartMeet)
 router.post('/createMeet/endMeet',checkAuth,meetingHandler.changeMeetStatus)
 router.get('/activeMeetings',checkAuth,meetingHandler.activeMeetDetails)
-router.get('/joinMeet',checkAuth,meetingHandler.joinMeetForParticipants)
+router.post('/joinMeet',checkAuth,meetingHandler.joinMeetForParticipants)
 router.get('/meetDetails',checkAuth,meetingHandler.getSpecificMeetDetails)
 router.post('/postMOM',checkAuth,meetingHandler.postmom)
-router.get('/test',checkAuth,meetingHandler.test )
+
 
 module.exports = router

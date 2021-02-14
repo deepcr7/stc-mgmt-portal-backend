@@ -13,4 +13,8 @@ router.post('/login',userAuth.loginFunction)
 //get user details
 router.get('/getuser',checkAuth,userAuth.getUserFunction);
 
+//reset password 
+router.post('/resetpassword',userAuth.passwordReset);
+router.put('/updatepassword',userAuth.updatePassword);
+
 module.exports = router

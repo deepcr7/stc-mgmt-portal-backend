@@ -13,6 +13,8 @@ router.get('/getallprojects',checkAuth,projectHandler.getAllProjects)
 router.delete('/deleteproject/:projectId',checkAuth,projectHandler.deleteProject)
 router.post('/updateproject/:projectId',checkAuth,projectHandler.updateProject)
 router.post('/searchproject',checkAuth,projectHandler.searchProjectwithAccessId)
+router.get('/getallusers',checkAuth,projectHandler.getAllUsers)
+router.get('/getuserid',checkAuth,projectHandler.getAllUsersWithId)
 
 //Task Routes
 

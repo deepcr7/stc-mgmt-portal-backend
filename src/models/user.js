@@ -11,11 +11,13 @@ const UserSchema = mongoose.Schema(
     username:{
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      trim:true
     },
     password: {
       type: String,
       required: true,
+      trim:true,
       minlength:8
     },
     email:{
@@ -54,6 +56,12 @@ const UserSchema = mongoose.Schema(
       },
         'Please enter a valid GitHub Link',
       ],
+    },
+    resetToken:{
+      type:String
+    },
+    resetExpires:{
+      type:Date
     }
     /*userImage: {
       type: String,
