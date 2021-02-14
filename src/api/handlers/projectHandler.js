@@ -73,11 +73,11 @@ async function getSpecificProject(req,res) {
                  "createdAt":{$gt:new Date(Date.now() - 15770000000)}
               }
              ]
-    } ).populate({path:'tasks',
+    } ).populate([{path:'tasks',
     populate:[{
       path:'allottedUsers'
     }]
-  })
+  },{path:'users'}])
     console.log(project)
     if(project.length === 0){
       return res.status(404).send({
