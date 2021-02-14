@@ -36,7 +36,7 @@ const ProjectSchema = mongoose.Schema(
       required:'Please enter a start date for this project!',
       validate: [
         function () {
-          return this.startDate > Date.now();
+          return this.startDate >= Date.now();
         },
         'Start date should not be in the past',
       ]

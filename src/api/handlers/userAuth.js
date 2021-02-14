@@ -1,6 +1,8 @@
 const User = require('../../models/user')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+var otpGenerator = require('otp-generator');
+const nodemailer = require('nodemailer')
 
 
 
@@ -95,8 +97,95 @@ async function getUserFunction(req,res){
   }
 }
 
+
+
+async function passwordReset(req,res,next){
+ try{
+  const user= await User.findOne({email:req.body.email})
+  .then(async (user)=>{
+   const otp= otpGenerator.generate(6, { upperCase: false, specialChars: false ,alphabets:false});
+   if(user==null)
+   res.status(401).send({message:"User not found!"})
+   else
+   {
+     user.resetToken = otp;
+   
+     //5 minutes expiry time
+     user.resetExpires=Date.now()+300000;
+
+     await user.save();
+
+ const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_ID,
+        pass: process.env.EMAIL_PASSWORD 
+      }
+    });
+
+      const mailOptions = {
+      from: process.env.EMAIL_ID,
+      to: req.body.email,
+      subject: 'Password Reset',
+      text: 'This is your OTP for Password Reset.\n ' + otp
+    }
+
+    transporter.sendMail(mailOptions, (err,information) => {
+      if(err){
+      console.log(err)
+      res.status(400).send({
+        message: "Error in sending Email!"
+      }) }
+      else {
+        console.log('Email successfully sent!')
+        res.status(200).send({
+          message:"Email has been sent"
+        })
+      }
+    })
+  }
+})
+} catch(err){
+  return res.status(500).send({
+    message:err.message
+  })
+}
+}
+
+async function updatePassword(req,res,next){
+  await User.findOne({resetToken:req.body.otp,resetExpires:{$gt:Date.now()}})
+  .then(async (user)=>{
+    console.log(user)
+    if(!user){
+      console.log('User not found!');
+      res.status(401).send({message:"User Not Found/Incorrect OTP!"})
+    }
+    else{
+      const salt = await bcrypt.genSalt(10);
+  //hash the password
+  hashedpassword = await bcrypt.hash(req.body.password, salt)
+
+  user.password = hashedpassword;
+  
+    user.resetToken=null;
+
+
+    await user.save();
+
+      
+      res.status(200).send({message:"Password Updated"});
+    }
+  })
+  .catch((err)=>{
+    return res.status(500).send(err);
+  }
+  )
+}
+
 module.exports ={
   signupFunction,
   loginFunction,
-  getUserFunction
+  getUserFunction,
+  passwordReset,
+  updatePassword
 }

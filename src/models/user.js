@@ -54,6 +54,12 @@ const UserSchema = mongoose.Schema(
       },
         'Please enter a valid GitHub Link',
       ],
+    },
+    resetToken:{
+      type:String
+    },
+    resetExpires:{
+      type:Date
     }
     /*userImage: {
       type: String,
